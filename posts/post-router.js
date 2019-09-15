@@ -37,15 +37,54 @@ router.get('/:id', (req, res) => {
 });
 
 router.post('/', (req, res) => {
+    // INSERT INTO posts (all of the keys from req.body) VALUE (all of the values from req.body)
+    const postData = req.body;
 
+    db('post').insert(postData)
+    .then(ids => {
+        res.status(201).json({ nesPostId: ids[0] })
+    })
+    .catch(err => {
+        console.log('post error: ', err)
+        res.status(500).json({ message: 'Failed to insert post'})
+    })
 });
 
 router.put('/:id', (req, res) => {
+    const { id } = req.params;
+    const changes = req.body;
+
+    // UPDATE Posts SET changes.key = change.value WHERE id = id (SQL)
+    // .where() comes first
+    db('posts').where({ id }).update(changes)
+    .then(count => {
+        if (count) {
+            res.json({ updated: count })
+        } else {
+            res.status(404).json({ message: 'invalid post id' })
+        }
+    })
+    .catch(err => {
+        res.status(500).json({ message: 'Failed to update post'})
+    })
 
 });
 
 router.delete('/:id', (req, res) => {
+    const { id } = req.params;
 
+    // DELETE FROM posts WHERE id = id (SQL);
+    db('posts').whereRaw({ id }).del()
+    .then(count => {
+        if (count) {
+            res.json({ deleted: count });
+        } else {
+            res.status(404).json({ message: 'invalid post id' })
+        }
+    })
+    .catch(err => {
+        res.status(500).json({ message: 'Failed to delete post'})
+    })
 });
 
 module.exports = router;
